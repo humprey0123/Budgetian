@@ -5,8 +5,82 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <title>Money Manager Extended</title>
       <script src="https://cdn.tailwindcss.com"></script>
-      <link rel="stylesheet" href="styles.css" />
-      <script src="app.js"></script>
+      <style>
+         /* Smooth modal fade-in */
+         #expense-modal,
+         #budget-modal {
+            display: flex;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+            z-index: 50;
+         }
+
+         #expense-modal.hidden,
+         #budget-modal.hidden {
+            display: none;
+            opacity: 0;
+         }
+
+         #expense-modal:not(.hidden),
+         #budget-modal:not(.hidden) {
+            opacity: 1;
+         }
+
+         /* Category Cards Hover Effect */
+         #category-cards div {
+            transition:
+               transform 0.2s,
+               box-shadow 0.2s;
+            cursor: pointer;
+         }
+
+         #category-cards div:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+         }
+
+         /* Expense Table Hover */
+         #expenses-table-body tr:hover {
+            background-color: #f3f4f6; /* Tailwind gray-100 */
+         }
+
+         /* Buttons */
+         button {
+            transition:
+               transform 0.1s ease,
+               box-shadow 0.1s ease;
+         }
+
+         button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+         }
+
+         /* Scrollbar for modal overflow */
+         #budget-modal form {
+            max-height: 70vh;
+            overflow-y: auto;
+         }
+
+         /* Input focus styles */
+         input:focus,
+         select:focus {
+            outline: none;
+            border-color: #2563eb; /* Tailwind blue-600 */
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+         }
+
+         /* Mobile adjustments */
+         @media (max-width: 768px) {
+            #category-cards {
+               grid-template-columns: 1fr !important;
+            }
+
+            .flex {
+               flex-direction: column !important;
+            }
+         }
+      </style>
    </head>
    <body class="bg-gray-100 text-gray-800">
       <!-- Header -->

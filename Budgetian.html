@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Money Manager Extended</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <style>
+         /* Smooth modal fade-in */
+         #expense-modal,
+         #budget-modal {
+            display: flex;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+            z-index: 50;
+         }
+
+         #expense-modal.hidden,
+         #budget-modal.hidden {
+            display: none;
+            opacity: 0;
+         }
+
+         #expense-modal:not(.hidden),
+         #budget-modal:not(.hidden) {
+            opacity: 1;
+         }
+
+         /* Category Cards Hover Effect */
+         #category-cards div {
+            transition:
+               transform 0.2s,
+               box-shadow 0.2s;
+            cursor: pointer;
+         }
+
+         #category-cards div:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+         }
+
+         /* Expense Table Hover */
+         #expenses-table-body tr:hover {
+            background-color: #f3f4f6; /* Tailwind gray-100 */
+         }
+
+         /* Buttons */
+         button {
+            transition:
+               transform 0.1s ease,
+               box-shadow 0.1s ease;
+         }
+
+         button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+         }
+
+         /* Scrollbar for modal overflow */
+         #budget-modal form {
+            max-height: 70vh;
+            overflow-y: auto;
+         }
+
+         /* Input focus styles */
+         input:focus,
+         select:focus {
+            outline: none;
+            border-color: #2563eb; /* Tailwind blue-600 */
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+         }
+
+         /* Mobile adjustments */
+         @media (max-width: 768px) {
+            #category-cards {
+               grid-template-columns: 1fr !important;
+            }
+
+            .flex {
+               flex-direction: column !important;
+            }
+         }
+      </style>
+   </head>
+   <body class="bg-gray-100 text-gray-800">
+      <!-- Header -->
+      <header class="bg-blue-600 text-white p-4 text-center text-2xl font-bold">
+         Budget
+      </header>
+
+      <!-- Dashboard -->
+      <main class="p-4 max-w-5xl mx-auto">
+         <!-- Total & Daily Allowance -->
+         <div
+            class="flex flex-col md:flex-row justify-between bg-white p-4 rounded shadow mb-4 gap-4"
+         >
+            <div>
+               <p class="text-gray-500">Total Monthly Budget</p>
+               <p id="total-budget" class="text-xl font-bold">₱0</p>
+            </div>
+            <div>
+               <p class="text-gray-500">Remaining</p>
+               <p id="remaining-budget" class="text-xl font-bold">₱0</p>
+            </div>
+            <div>
+               <p class="text-gray-500">Daily Allowance</p>
+               <p id="daily-allowance" class="text-xl font-bold">₱0/day</p>
+            </div>
+         </div>
+
+         <!-- Category Cards -->
+         <div
+            id="category-cards"
+            class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4"
+         >
+            <!-- JS will render category cards here -->
+         </div>
+
+         <!-- Action Buttons -->
+         <div class="flex gap-4 mb-6">
+            <button
+               id="add-expense-btn"
+               class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+            >
+               + Add Expense
+            </button>
+            <button
+               id="edit-budget-btn"
+               class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
+            >
+               Edit Budget
+            </button>
+         </div>
+
+         <!-- Expenses Table -->
+         <div class="bg-white p-4 rounded shadow mb-6">
+            <h2 class="text-xl font-bold mb-4">Expenses</h2>
+            <table class="w-full border-collapse text-left">
+               <thead>
+                  <tr class="bg-gray-200">
+                     <th class="p-2 border">Date</th>
+                     <th class="p-2 border">Category</th>
+                     <th class="p-2 border">Amount</th>
+                     <th class="p-2 border">Note</th>
+                     <th class="p-2 border">Actions</th>
+                  </tr>
+               </thead>
+               <tbody id="expenses-table-body">
+                  <!-- JS will populate expenses here -->
+               </tbody>
+            </table>
+         </div>
+      </main>
+
+      <!-- Add Expense Modal -->
+      <div
+         id="expense-modal"
+         class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center"
+      >
+         <div class="bg-white p-6 rounded shadow w-96">
+            <h2 class="text-xl font-bold mb-4">Add Expense</h2>
+            <form id="expense-form" class="space-y-4">
+               <div>
+                  <label class="block text-gray-700">Category</label>
+                  <select
+                     id="expense-category"
+                     class="w-full border rounded p-2"
+                  ></select>
+               </div>
+               <div>
+                  <label class="block text-gray-700">Amount</label>
+                  <input
+                     type="number"
+                     id="expense-amount"
+                     class="w-full border rounded p-2"
+                     required
+                     min="0"
+                     step="0.01"
+                  />
+               </div>
+               <div>
+                  <label class="block text-gray-700">Note (optional)</label>
+                  <input
+                     type="text"
+                     id="expense-note"
+                     class="w-full border rounded p-2"
+                  />
+               </div>
+               <div class="flex justify-end gap-2">
+                  <button
+                     type="button"
+                     id="cancel-expense"
+                     class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
+                  >
+                     Cancel
+                  </button>
+                  <button
+                     type="submit"
+                     class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                  >
+                     Add
+                  </button>
+               </div>
+            </form>
+         </div>
+      </div>
+
+      <!-- Edit Budget Modal -->
+      <div
+         id="budget-modal"
+         class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center overflow-auto"
+      >
+         <div
+            class="bg-white p-6 rounded shadow w-96 max-h-[90vh] overflow-y-auto"
+         >
+            <h2 class="text-xl font-bold mb-4">Edit Budget</h2>
+            <form id="budget-form" class="space-y-4">
+               <div>
+                  <label class="block text-gray-700"
+                     >Total Monthly Income</label
+                  >
+                  <input
+                     type="number"
+                     id="budget-income"
+                     class="w-full border rounded p-2"
+                     required
+                     min="0"
+                     step="0.01"
+                  />
+               </div>
+               <div id="budget-categories-container">
+                  <!-- JS will render category input fields here -->
+               </div>
+               <button
+                  type="button"
+                  id="add-category-btn"
+                  class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 w-full"
+               >
+                  + Add Category
+               </button>
+               <div class="flex justify-end gap-2 mt-4">
+                  <button
+                     type="button"
+                     id="cancel-budget"
+                     class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
+                  >
+                     Cancel
+                  </button>
+                  <button
+                     type="submit"
+                     class="px-4 py-2 rounded bg-yellow-500 text-white hover:bg-yellow-600"
+                  >
+                     Save
+                  </button>
+               </div>
+            </form>
+         </div>
+      </div>
+   </body>
+</html>
+
+<script>
+   // ======== Data ========
+   let budget = {
+      income: 20000,
+      categories: [
+         { name: "Food", budget: 8000, spent: 0 },
+         { name: "Rent", budget: 3000, spent: 0 },
+         { name: "Entertainment", budget: 300, spent: 0 },
+      ],
+   };
+
+   let expenses = [];
+
+   // ======== Elements ========
+   const totalBudgetEl = document.getElementById("total-budget");
+   const remainingBudgetEl = document.getElementById("remaining-budget");
+   const dailyAllowanceEl = document.getElementById("daily-allowance");
+   const categoryCardsEl = document.getElementById("category-cards");
+   const expensesTableBody = document.getElementById("expenses-table-body");
+
+   const expenseModal = document.getElementById("expense-modal");
+   const addExpenseBtn = document.getElementById("add-expense-btn");
+   const cancelExpenseBtn = document.getElementById("cancel-expense");
+   const expenseForm = document.getElementById("expense-form");
+   const expenseCategory = document.getElementById("expense-category");
+   const expenseAmount = document.getElementById("expense-amount");
+   const expenseNote = document.getElementById("expense-note");
+
+   const budgetModal = document.getElementById("budget-modal");
+   const editBudgetBtn = document.getElementById("edit-budget-btn");
+   const cancelBudgetBtn = document.getElementById("cancel-budget");
+   const budgetForm = document.getElementById("budget-form");
+   const budgetIncomeInput = document.getElementById("budget-income");
+   const budgetCategoriesContainer = document.getElementById(
+      "budget-categories-container",
+   );
+   const addCategoryBtn = document.getElementById("add-category-btn");
+
+   // ======== Functions ========
+
+   // Calculate spent per category and totals
+   function recalcSpent() {
+      // Reset spent
+      budget.categories.forEach((c) => (c.spent = 0));
+      expenses.forEach((e) => {
+         const cat = budget.categories.find((c) => c.name === e.category);
+         if (cat) cat.spent += e.amount;
+      });
+   }
+
+   // Render dashboard and category cards
+   function updateDashboard() {
+      recalcSpent();
+      const totalAllocated = budget.categories.reduce(
+         (acc, c) => acc + c.budget,
+         0,
+      );
+      const remaining = budget.income - totalAllocated;
+      const today = new Date();
+      const daysLeft =
+         new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate() -
+         today.getDate() +
+         1;
+      const dailyAllowance = budget.categories[0].budget / daysLeft;
+
+      totalBudgetEl.textContent = `₱${budget.income.toFixed(2)}`;
+      remainingBudgetEl.textContent = `₱${remaining.toFixed(2)}`;
+      dailyAllowanceEl.textContent = `₱${dailyAllowance.toFixed(2)}/day`;
+
+      // Render category cards
+      categoryCardsEl.innerHTML = "";
+      budget.categories.forEach((c) => {
+         const remainingCat = c.budget - c.spent;
+         let color = "bg-green-100";
+         if (remainingCat < 0) color = "bg-red-200";
+         else if (remainingCat / c.budget < 0.2) color = "bg-yellow-200";
+
+         const card = document.createElement("div");
+         card.className = `${color} p-4 rounded shadow`;
+         card.innerHTML = `
+        <h3 class="font-bold">${c.name}</h3>
+        <p>Spent: ₱${c.spent.toFixed(2)} / ₱${c.budget.toFixed(2)}</p>
+        <p>Remaining: ₱${remainingCat.toFixed(2)}</p>
+      `;
+         categoryCardsEl.appendChild(card);
+      });
+
+      // Populate expense category select
+      expenseCategory.innerHTML = "";
+      budget.categories.forEach((c) => {
+         const option = document.createElement("option");
+         option.value = c.name;
+         option.textContent = c.name;
+         expenseCategory.appendChild(option);
+      });
+
+      // Render expenses table
+      renderExpensesTable();
+   }
+
+   // Render expenses table
+   function renderExpensesTable() {
+      expensesTableBody.innerHTML = "";
+      expenses.forEach((e, index) => {
+         const row = document.createElement("tr");
+         row.innerHTML = `
+        <td class="p-2 border">${e.date}</td>
+        <td class="p-2 border">${e.category}</td>
+        <td class="p-2 border">$${e.amount.toFixed(2)}</td>
+        <td class="p-2 border">${e.note}</td>
+        <td class="p-2 border flex gap-2">
+          <button class="edit-btn bg-yellow-400 px-2 rounded hover:bg-yellow-500" data-index="${index}">✎</button>
+          <button class="delete-btn bg-red-400 px-2 rounded hover:bg-red-500" data-index="${index}">🗑</button>
+        </td>
+      `;
+         expensesTableBody.appendChild(row);
+      });
+
+      // Add event listeners for delete
+      document.querySelectorAll(".delete-btn").forEach((btn) => {
+         btn.addEventListener("click", () => {
+            const i = btn.dataset.index;
+            expenses.splice(i, 1);
+            saveData();
+            updateDashboard();
+         });
+      });
+
+      // (Optional) Add edit functionality later
+   }
+
+   // Save to LocalStorage
+   function saveData() {
+      localStorage.setItem("budget", JSON.stringify(budget));
+      localStorage.setItem("expenses", JSON.stringify(expenses));
+   }
+
+   // Load from LocalStorage
+   function loadData() {
+      if (localStorage.getItem("budget"))
+         budget = JSON.parse(localStorage.getItem("budget"));
+      if (localStorage.getItem("expenses"))
+         expenses = JSON.parse(localStorage.getItem("expenses"));
+   }
+
+   // Open/Close Modals
+   function openModal(modal) {
+      modal.classList.remove("hidden");
+   }
+   function closeModal(modal) {
+      modal.classList.add("hidden");
+   }
+
+   // ======== Event Listeners ========
+
+   // Add Expense
+   addExpenseBtn.addEventListener("click", () => openModal(expenseModal));
+   cancelExpenseBtn.addEventListener("click", () => {
+      closeModal(expenseModal);
+      expenseForm.reset();
+   });
+
+   expenseForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const amount = parseFloat(expenseAmount.value);
+      const category = expenseCategory.value;
+      const note = expenseNote.value;
+      const date = new Date().toISOString().split("T")[0];
+
+      expenses.push({ amount, category, note, date });
+      saveData();
+      updateDashboard();
+      closeModal(expenseModal);
+      expenseForm.reset();
+   });
+
+   // Edit Budget
+   editBudgetBtn.addEventListener("click", () => {
+      openModal(budgetModal);
+      budgetIncomeInput.value = budget.income;
+
+      budgetCategoriesContainer.innerHTML = "";
+      budget.categories.forEach((c, i) => {
+         const div = document.createElement("div");
+         div.className = "flex gap-2 mb-2";
+         div.innerHTML = `
+        <input type="text" value="${c.name}" placeholder="Category" class="flex-1 border rounded p-2 category-name" required>
+        <input type="number" value="${c.budget}" placeholder="Budget" class="w-24 border rounded p-2 category-budget" required min="0" step="0.01">
+        <button type="button" class="remove-category bg-red-400 px-2 rounded hover:bg-red-500">🗑</button>
+      `;
+         budgetCategoriesContainer.appendChild(div);
+
+         div.querySelector(".remove-category").addEventListener("click", () => {
+            div.remove();
+         });
+      });
+   });
+
+   cancelBudgetBtn.addEventListener("click", () => closeModal(budgetModal));
+
+   // Add new category input in Edit Budget
+   addCategoryBtn.addEventListener("click", () => {
+      const div = document.createElement("div");
+      div.className = "flex gap-2 mb-2";
+      div.innerHTML = `
+      <input type="text" placeholder="Category" class="flex-1 border rounded p-2 category-name" required>
+      <input type="number" placeholder="Budget" class="w-24 border rounded p-2 category-budget" required min="0" step="0.01">
+      <button type="button" class="remove-category bg-red-400 px-2 rounded hover:bg-red-500">🗑</button>
+    `;
+      budgetCategoriesContainer.appendChild(div);
+
+      div.querySelector(".remove-category").addEventListener("click", () =>
+         div.remove(),
+      );
+   });
+
+   // Save Budget
+   budgetForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      budget.income = parseFloat(budgetIncomeInput.value);
+      const newCategories = [];
+      budgetCategoriesContainer.querySelectorAll("div").forEach((div) => {
+         const name = div.querySelector(".category-name").value.trim();
+         const b = parseFloat(div.querySelector(".category-budget").value);
+         if (name && !isNaN(b))
+            newCategories.push({ name, budget: b, spent: 0 });
+      });
+      budget.categories = newCategories;
+      saveData();
+      updateDashboard();
+      closeModal(budgetModal);
+   });
+
+   // ======== Initialize ========
+   loadData();
+   updateDashboard();
+</script>
+
+<!-- ---
+
+## **Monthly & Daily Budget Money Manager Web App**
+
+> I want to build a **simple web-based money manager** that helps users track monthly and daily budgets by category. The app should allow users to:
+>
+> 1. **Set up monthly income** and **budget categories** such as:
+>  * Create more categories
+>  * Set total monthly income
+>  * Set a monthly budget for each category
+>  * Automatic reduction of total monthly budget and remaining money after adding category budget
+>  *
+>
+> 2. **Add expenses** with:
+>    * Category
+>    * Amount
+>    * Optional note
+>    * Automatic date assignment
+     * Automatic update of remaining budget and category-specific daily allowance after adding expenses
+     * Editable and deletable expenses for better tracking
+>
+> 3. **Dashboard** showing:
+>
+>    * Has 2 choices, monthly and daily budget per category
+>    * Monthly total budget and remaining money
+>    * Monthly budget per category
+>    * Spent amount per category
+>    * Remaining money per category
+>    * **Daily allowance** automatically calculated (`remaining ÷ days left in month`)
+>    * Color-coded alerts:
+>
+>      * Green: within budget
+>      * Yellow: approaching limit (e.g., <20% left)
+>      * Red: overspent
+>
+> 4. **Expenses list** with table by category and date
+>     * Has tabs for each category and an "All Expenses" tab
+>     
+>
+> 5. **Edit budget feature** allowing users to update their monthly budgets and income at any time
+>
+> 6. **Data persistence**:
+>
+>    * First version can use **Local Storage** (fast, offline, single-user)
+>    * Later version can include **multi-user support with login** and cloud storage (Laravel + database)
+>
+> 7. **Tech stack**:
+>
+>    * Frontend: HTML + Vanilla JS + CSS (Tailwind optional)
+>    * Backend: Optional for later version (Laravel)
+>
+> The goal is to create a **practical, user-friendly tool** where users can plan their budgets and be aware of daily spending and avoid accidentally spending savings.
+
+---
+
+💡 Optional Add-ons for the prompt:
+
+* Add **edit/delete individual expenses**
+* Add **charts or graphs** for spending trends
+* Make it a **PWA** so it can be installed on phones
+
+---
+ -->

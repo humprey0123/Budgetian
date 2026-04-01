@@ -1,0 +1,64 @@
+
+<!-- ---
+
+## **Monthly & Daily Budget Money Manager Web App**
+
+> I want to build a **simple web-based money manager** that helps users track monthly and daily budgets by category. The app should allow users to:
+>
+> 1. **Set up monthly income** and **budget categories** such as:
+>  * Create more categories
+>  * Set total monthly income
+>  * Set a monthly budget for each category
+>  * Automatic reduction of total monthly budget and remaining money after adding category budget
+>  *
+>
+> 2. **Add expenses** with:
+>    * Category
+>    * Amount
+>    * Optional note
+>    * Automatic date assignment
+     * Automatic update of remaining budget and category-specific daily allowance after adding expenses
+     * Editable and deletable expenses for better tracking
+>
+> 3. **Dashboard** showing:
+>
+>    * Has 2 choices, monthly and daily budget per category
+>    * Monthly total budget and remaining money
+>    * Monthly budget per category
+>    * Spent amount per category
+>    * Remaining money per category
+>    * **Daily allowance** automatically calculated (`remaining ÷ days left in month`)
+>    * Color-coded alerts:
+>
+>      * Green: within budget
+>      * Yellow: approaching limit (e.g., <20% left)
+>      * Red: overspent
+>
+> 4. **Expenses list** with table by category and date
+>     * Has tabs for each category and an "All Expenses" tab
+>     
+>
+> 5. **Edit budget feature** allowing users to update their monthly budgets and income at any time
+>
+> 6. **Data persistence**:
+>
+>    * First version can use **Local Storage** (fast, offline, single-user)
+>    * Later version can include **multi-user support with login** and cloud storage (Laravel + database)
+>
+> 7. **Tech stack**:
+>
+>    * Frontend: HTML + Vanilla JS + CSS (Tailwind optional)
+>    * Backend: Optional for later version (Laravel)
+>
+> The goal is to create a **practical, user-friendly tool** where users can plan their budgets and be aware of daily spending and avoid accidentally spending savings.
+
+---
+
+💡 Optional Add-ons for the prompt:
+
+* Add **edit/delete individual expenses**
+* Add **charts or graphs** for spending trends
+* Make it a **PWA** so it can be installed on phones
+
+---
+ -->

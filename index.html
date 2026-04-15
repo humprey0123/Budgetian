@@ -1,946 +1,562 @@
-<h2 class="sr-only">
-   Weekly Budget Manager — track spending by week with a monthly overview
-</h2>
+<!doctype html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Money Manager Extended</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <style>
+         /* Smooth modal fade-in */
+         #expense-modal,
+         #budget-modal {
+            display: flex;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+            z-index: 50;
+         }
 
-<style>
-   * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-   }
-   body {
-      font-family: var(--font-sans);
-      background: transparent;
-      color: var(--color-text-primary);
-      font-size: 15px;
-   }
-   .app {
-      padding: 0 0 2rem;
-   }
-   header {
-      background: #2563eb;
-      color: #fff;
-      padding: 14px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
-   }
-   header h1 {
-      font-size: 17px;
-      font-weight: 500;
-   }
-   header .month-nav {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 14px;
-   }
-   header button {
-      background: rgba(255, 255, 255, 0.2);
-      border: none;
-      color: #fff;
-      padding: 4px 10px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-   }
-   .section {
-      padding: 16px 20px;
-      border-bottom: 0.5px solid var(--color-border-tertiary);
-   }
-   .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-   }
-   .stat-card {
-      background: var(--color-background-secondary);
-      border-radius: var(--border-radius-md);
-      padding: 12px 14px;
-   }
-   .stat-card .label {
-      font-size: 12px;
-      color: var(--color-text-secondary);
-      margin-bottom: 4px;
-   }
-   .stat-card .value {
-      font-size: 20px;
-      font-weight: 500;
-   }
-   .stat-card .value.danger {
-      color: #dc2626;
-   }
-   .stat-card .value.warn {
-      color: #d97706;
-   }
-   .weeks-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 12px;
-   }
-   .weeks-header h2 {
-      font-size: 15px;
-      font-weight: 500;
-   }
-   .week-tabs {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-   }
-   .week-tab {
-      padding: 6px 14px;
-      border-radius: 20px;
-      border: 0.5px solid var(--color-border-secondary);
-      background: transparent;
-      color: var(--color-text-secondary);
-      font-size: 13px;
-      cursor: pointer;
-      transition: all 0.15s;
-   }
-   .week-tab.active {
-      background: #2563eb;
-      color: #fff;
-      border-color: #2563eb;
-   }
-   .week-tab.over {
-      border-color: #dc2626;
-      color: #dc2626;
-   }
-   .week-tab.active.over {
-      background: #dc2626;
-      border-color: #dc2626;
-      color: #fff;
-   }
-   .btn {
-      padding: 7px 14px;
-      border-radius: var(--border-radius-md);
-      border: 0.5px solid var(--color-border-secondary);
-      background: transparent;
-      color: var(--color-text-primary);
-      font-size: 13px;
-      cursor: pointer;
-   }
-   .btn.primary {
-      background: #2563eb;
-      color: #fff;
-      border-color: #2563eb;
-   }
-   .btn.success {
-      background: #16a34a;
-      color: #fff;
-      border-color: #16a34a;
-   }
-   .btn.danger {
-      background: transparent;
-      color: #dc2626;
-      border-color: #dc2626;
-   }
-   .btn.sm {
-      padding: 4px 10px;
-      font-size: 12px;
-   }
-   .cat-cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 10px;
-      margin-bottom: 12px;
-   }
-   .cat-card {
-      background: var(--color-background-primary);
-      border: 0.5px solid var(--color-border-tertiary);
-      border-radius: var(--border-radius-md);
-      padding: 12px;
-   }
-   .cat-card.green {
-      border-left: 3px solid #16a34a;
-   }
-   .cat-card.yellow {
-      border-left: 3px solid #d97706;
-   }
-   .cat-card.red {
-      border-left: 3px solid #dc2626;
-   }
-   .cat-card .cat-name {
-      font-weight: 500;
-      font-size: 14px;
-      margin-bottom: 6px;
-   }
-   .cat-card .cat-nums {
-      font-size: 12px;
-      color: var(--color-text-secondary);
-   }
-   .cat-card .cat-remain {
-      font-size: 13px;
-      margin-top: 2px;
-   }
-   .cat-card .cat-remain.over {
-      color: #dc2626;
-   }
-   .progress-bar {
-      height: 4px;
-      background: var(--color-background-secondary);
-      border-radius: 2px;
-      margin-top: 6px;
-      overflow: hidden;
-   }
-   .progress-fill {
-      height: 100%;
-      border-radius: 2px;
-      background: #16a34a;
-      transition: width 0.3s;
-   }
-   .progress-fill.warn {
-      background: #d97706;
-   }
-   .progress-fill.over {
-      background: #dc2626;
-   }
-   table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-   }
-   thead th {
-      text-align: left;
-      padding: 8px 10px;
-      color: var(--color-text-secondary);
-      font-weight: 500;
-      border-bottom: 0.5px solid var(--color-border-tertiary);
-   }
-   tbody tr {
-      border-bottom: 0.5px solid var(--color-border-tertiary);
-   }
-   tbody tr:hover {
-      background: var(--color-background-secondary);
-   }
-   tbody td {
-      padding: 8px 10px;
-   }
-   .actions {
-      display: flex;
-      gap: 6px;
-   }
-   .modal-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.45);
-      z-index: 100;
-      align-items: center;
-      justify-content: center;
-   }
-   .modal-overlay.open {
-      display: flex;
-   }
-   .modal {
-      background: var(--color-background-primary);
-      border-radius: var(--border-radius-lg);
-      padding: 20px;
-      width: 380px;
-      max-width: 95vw;
-      max-height: 85vh;
-      overflow-y: auto;
-      border: 0.5px solid var(--color-border-secondary);
-   }
-   .modal h2 {
-      font-size: 16px;
-      font-weight: 500;
-      margin-bottom: 16px;
-   }
-   .form-group {
-      margin-bottom: 12px;
-   }
-   .form-group label {
-      display: block;
-      font-size: 13px;
-      color: var(--color-text-secondary);
-      margin-bottom: 4px;
-   }
-   .form-group input,
-   .form-group select {
-      width: 100%;
-      padding: 8px 10px;
-      border: 0.5px solid var(--color-border-secondary);
-      border-radius: var(--border-radius-md);
-      background: var(--color-background-primary);
-      color: var(--color-text-primary);
-      font-size: 14px;
-   }
-   .modal-actions {
-      display: flex;
-      gap: 8px;
-      justify-content: flex-end;
-      margin-top: 16px;
-   }
-   .cat-row {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      margin-bottom: 8px;
-   }
-   .cat-row input {
-      flex: 1;
-      padding: 7px 10px;
-      border: 0.5px solid var(--color-border-secondary);
-      border-radius: var(--border-radius-md);
-      background: var(--color-background-primary);
-      color: var(--color-text-primary);
-      font-size: 13px;
-   }
-   .badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 10px;
-      font-size: 11px;
-      font-weight: 500;
-   }
-   .badge.green {
-      background: #dcfce7;
-      color: #15803d;
-   }
-   .badge.yellow {
-      background: #fef3c7;
-      color: #92400e;
-   }
-   .badge.red {
-      background: #fee2e2;
-      color: #991b1b;
-   }
-   .empty-state {
-      text-align: center;
-      padding: 24px;
-      color: var(--color-text-secondary);
-      font-size: 13px;
-   }
-   .week-summary-bar {
-      background: var(--color-background-secondary);
-      border-radius: var(--border-radius-md);
-      padding: 10px 14px;
-      margin-bottom: 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 13px;
-   }
-   .expense-tabs {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 12px;
-      flex-wrap: wrap;
-   }
-   .exp-tab {
-      padding: 5px 12px;
-      border-radius: 14px;
-      border: 0.5px solid var(--color-border-secondary);
-      background: transparent;
-      color: var(--color-text-secondary);
-      font-size: 12px;
-      cursor: pointer;
-   }
-   .exp-tab.active {
-      background: var(--color-background-secondary);
-      color: var(--color-text-primary);
-      border-color: var(--color-border-primary);
-   }
-   .top-actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-   }
-</style>
+         #expense-modal.hidden,
+         #budget-modal.hidden {
+            display: none;
+            opacity: 0;
+         }
 
-<div class="app">
-   <header>
-      <div style="display: flex; align-items: center; gap: 10px">
-         <span style="font-size: 18px">₱</span>
-         <h1 id="header-title">Budget Manager</h1>
-      </div>
-      <div class="month-nav">
-         <button onclick="changeMonth(-1)">‹</button>
-         <span id="month-label"></span>
-         <button onclick="changeMonth(1)">›</button>
-      </div>
-   </header>
+         #expense-modal:not(.hidden),
+         #budget-modal:not(.hidden) {
+            opacity: 1;
+         }
 
-   <div class="section">
-      <div class="stats-grid" id="stats-grid"></div>
-   </div>
+         /* Category Cards Hover Effect */
+         #category-cards div {
+            transition:
+               transform 0.2s,
+               box-shadow 0.2s;
+            cursor: pointer;
+         }
 
-   <div class="section">
-      <div class="weeks-header">
-         <h2>Weeks</h2>
-         <div class="top-actions">
-            <button class="btn" onclick="openExpenseModal()">
-               + Add expense
+         #category-cards div:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+         }
+
+         /* Expense Table Hover */
+         #expenses-table-body tr:hover {
+            background-color: #f3f4f6; /* Tailwind gray-100 */
+         }
+
+         /* Buttons */
+         button {
+            transition:
+               transform 0.1s ease,
+               box-shadow 0.1s ease;
+         }
+
+         button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+         }
+
+         /* Scrollbar for modal overflow */
+         #budget-modal form {
+            max-height: 70vh;
+            overflow-y: auto;
+         }
+
+         /* Input focus styles */
+         input:focus,
+         select:focus {
+            outline: none;
+            border-color: #2563eb; /* Tailwind blue-600 */
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+         }
+
+         /* Mobile adjustments */
+         @media (max-width: 768px) {
+            #category-cards {
+               grid-template-columns: 1fr !important;
+            }
+
+            .flex {
+               flex-direction: column !important;
+            }
+         }
+      </style>
+   </head>
+   <body class="bg-gray-100 text-gray-800">
+      <!-- Header -->
+      <header class="bg-blue-600 text-white p-4 text-center text-2xl font-bold">
+         Budget
+      </header>
+
+      <!-- Dashboard -->
+      <main class="p-4 max-w-5xl mx-auto">
+         <!-- Total & Daily Allowance -->
+         <div
+            class="flex flex-col md:flex-row justify-between bg-white p-4 rounded shadow mb-4 gap-4"
+         >
+            <div>
+               <p class="text-gray-500">Total Monthly Budget</p>
+               <p id="total-budget" class="text-xl font-bold">₱0</p>
+            </div>
+            <div>
+               <p class="text-gray-500">Remaining</p>
+               <p id="remaining-budget" class="text-xl font-bold">₱0</p>
+            </div>
+            <div>
+               <p class="text-gray-500">Daily Allowance</p>
+               <p id="daily-allowance" class="text-xl font-bold">₱0/day</p>
+            </div>
+         </div>
+
+         <!-- Category Cards -->
+         <div
+            id="category-cards"
+            class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4"
+         >
+            <!-- JS will render category cards here -->
+         </div>
+
+         <!-- Action Buttons -->
+         <div class="flex gap-4 mb-6">
+            <button
+               id="add-expense-btn"
+               class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+            >
+               + Add Expense
             </button>
-            <button class="btn" onclick="openBudgetModal()">Edit budget</button>
-            <button class="btn success" onclick="addWeek()">+ Add week</button>
+            <button
+               id="edit-budget-btn"
+               class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
+            >
+               Edit Budget
+            </button>
+         </div>
+
+         <!-- Expenses Table -->
+         <div class="bg-white p-4 rounded shadow mb-6">
+            <h2 class="text-xl font-bold mb-4">Expenses</h2>
+            <table class="w-full border-collapse text-left">
+               <thead>
+                  <tr class="bg-gray-200">
+                     <th class="p-2 border">Date</th>
+                     <th class="p-2 border">Category</th>
+                     <th class="p-2 border">Amount</th>
+                     <th class="p-2 border">Note</th>
+                     <th class="p-2 border">Actions</th>
+                  </tr>
+               </thead>
+               <tbody id="expenses-table-body">
+                  <!-- JS will populate expenses here -->
+               </tbody>
+            </table>
+         </div>
+      </main>
+
+      <!-- Add Expense Modal -->
+      <div
+         id="expense-modal"
+         class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center"
+      >
+         <div class="bg-white p-6 rounded shadow w-96">
+            <h2 class="text-xl font-bold mb-4">Add Expense</h2>
+            <form id="expense-form" class="space-y-4">
+               <div>
+                  <label class="block text-gray-700">Category</label>
+                  <select
+                     id="expense-category"
+                     class="w-full border rounded p-2"
+                  ></select>
+               </div>
+               <div>
+                  <label class="block text-gray-700">Amount</label>
+                  <input
+                     type="number"
+                     id="expense-amount"
+                     class="w-full border rounded p-2"
+                     required
+                     min="0"
+                     step="0.01"
+                  />
+               </div>
+               <div>
+                  <label class="block text-gray-700">Note (optional)</label>
+                  <input
+                     type="text"
+                     id="expense-note"
+                     class="w-full border rounded p-2"
+                  />
+               </div>
+               <div class="flex justify-end gap-2">
+                  <button
+                     type="button"
+                     id="cancel-expense"
+                     class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
+                  >
+                     Cancel
+                  </button>
+                  <button
+                     type="submit"
+                     class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                  >
+                     Add
+                  </button>
+               </div>
+            </form>
          </div>
       </div>
-      <div class="week-tabs" id="week-tabs"></div>
-   </div>
 
-   <div class="section">
-      <div class="week-summary-bar" id="week-summary-bar"></div>
-      <div class="cat-cards" id="cat-cards"></div>
-   </div>
-
-   <div class="section">
+      <!-- Edit Budget Modal -->
       <div
-         style="
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-         "
+         id="budget-modal"
+         class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center overflow-auto"
       >
-         <h2 style="font-size: 15px; font-weight: 500">Expenses</h2>
-         <div class="expense-tabs" id="expense-tabs"></div>
+         <div
+            class="bg-white p-6 rounded shadow w-96 max-h-[90vh] overflow-y-auto"
+         >
+            <h2 class="text-xl font-bold mb-4">Edit Budget</h2>
+            <form id="budget-form" class="space-y-4">
+               <div>
+                  <label class="block text-gray-700"
+                     >Total Monthly Income</label
+                  >
+                  <input
+                     type="number"
+                     id="budget-income"
+                     class="w-full border rounded p-2"
+                     required
+                     min="0"
+                     step="0.01"
+                  />
+               </div>
+               <div id="budget-categories-container">
+                  <!-- JS will render category input fields here -->
+               </div>
+               <button
+                  type="button"
+                  id="add-category-btn"
+                  class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 w-full"
+               >
+                  + Add Category
+               </button>
+               <div class="flex justify-end gap-2 mt-4">
+                  <button
+                     type="button"
+                     id="cancel-budget"
+                     class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
+                  >
+                     Cancel
+                  </button>
+                  <button
+                     type="submit"
+                     class="px-4 py-2 rounded bg-yellow-500 text-white hover:bg-yellow-600"
+                  >
+                     Save
+                  </button>
+               </div>
+            </form>
+         </div>
       </div>
-      <table>
-         <thead>
-            <tr>
-               <th>Date</th>
-               <th>Category</th>
-               <th>Amount</th>
-               <th>Note</th>
-               <th>Actions</th>
-            </tr>
-         </thead>
-         <tbody id="expenses-body"></tbody>
-      </table>
-   </div>
-</div>
-
-<div class="modal-overlay" id="expense-modal">
-   <div class="modal">
-      <h2 id="expense-modal-title">Add expense</h2>
-      <div class="form-group">
-         <label>Category</label>
-         <select id="exp-category"></select>
-      </div>
-      <div class="form-group">
-         <label>Amount (₱)</label>
-         <input
-            type="number"
-            id="exp-amount"
-            min="0"
-            step="0.01"
-            placeholder="0.00"
-         />
-      </div>
-      <div class="form-group">
-         <label>Week</label>
-         <select id="exp-week"></select>
-      </div>
-      <div class="form-group">
-         <label>Date</label>
-         <input type="date" id="exp-date" />
-      </div>
-      <div class="form-group">
-         <label>Note (optional)</label>
-         <input type="text" id="exp-note" placeholder="e.g. Groceries at SM" />
-      </div>
-      <div class="modal-actions">
-         <button class="btn" onclick="closeModal('expense-modal')">
-            Cancel
-         </button>
-         <button class="btn primary" onclick="saveExpense()">Save</button>
-      </div>
-   </div>
-</div>
-
-<div class="modal-overlay" id="budget-modal">
-   <div class="modal">
-      <h2>Edit budget</h2>
-      <div class="form-group">
-         <label>Monthly income (₱)</label>
-         <input type="number" id="bud-income" min="0" step="0.01" />
-      </div>
-      <div
-         style="
-            margin-bottom: 8px;
-            font-size: 13px;
-            color: var(--color-text-secondary);
-         "
-      >
-         Categories
-      </div>
-      <div id="bud-categories"></div>
-      <button
-         class="btn"
-         style="width: 100%; margin-top: 4px"
-         onclick="addBudgetCategoryRow()"
-      >
-         + Add category
-      </button>
-      <div class="modal-actions">
-         <button class="btn" onclick="closeModal('budget-modal')">
-            Cancel
-         </button>
-         <button class="btn primary" onclick="saveBudget()">Save</button>
-      </div>
-   </div>
-</div>
+   </body>
+</html>
 
 <script>
-   const MONTHS = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
-   ];
+   // ======== Data ========
+   let budget = {
+      income: 20000,
+      categories: [
+         { name: "Food", budget: 8000, spent: 0 },
+         { name: "Rent", budget: 3000, spent: 0 },
+         { name: "Entertainment", budget: 300, spent: 0 },
+      ],
+   };
 
-   let state = loadState();
-   let viewMonth = new Date().getMonth();
-   let viewYear = new Date().getFullYear();
-   let activeWeekIdx = 0;
-   let activeExpTab = "all";
-   let editingExpenseId = null;
+   let expenses = [];
 
-   function defaultState() {
-      const now = new Date();
-      const m = now.getMonth(),
-         y = now.getFullYear();
-      return {
-         income: 20000,
-         categories: [
-            { name: "Food", budget: 8000 },
-            { name: "Rent", budget: 3000 },
-            { name: "Entertainment", budget: 300 },
-         ],
-         weeks: {
-            [`${y}-${m}`]: [
-               {
-                  label: "Week 1",
-                  start: `${y}-${String(m + 1).padStart(2, "0")}-01`,
-                  end: `${y}-${String(m + 1).padStart(2, "0")}-07`,
-               },
-               {
-                  label: "Week 2",
-                  start: `${y}-${String(m + 1).padStart(2, "0")}-08`,
-                  end: `${y}-${String(m + 1).padStart(2, "0")}-14`,
-               },
-               {
-                  label: "Week 3",
-                  start: `${y}-${String(m + 1).padStart(2, "0")}-15`,
-                  end: `${y}-${String(m + 1).padStart(2, "0")}-21`,
-               },
-               {
-                  label: "Week 4",
-                  start: `${y}-${String(m + 1).padStart(2, "0")}-22`,
-                  end: `${y}-${String(m + 1).padStart(2, "0")}-${new Date(y, m + 1, 0).getDate()}`,
-               },
-            ],
-         },
-         expenses: [],
-      };
-   }
+   // ======== Elements ========
+   const totalBudgetEl = document.getElementById("total-budget");
+   const remainingBudgetEl = document.getElementById("remaining-budget");
+   const dailyAllowanceEl = document.getElementById("daily-allowance");
+   const categoryCardsEl = document.getElementById("category-cards");
+   const expensesTableBody = document.getElementById("expenses-table-body");
 
-   function loadState() {
-      try {
-         const s = localStorage.getItem("wbm_state");
-         if (s) return JSON.parse(s);
-      } catch (e) {}
-      return defaultState();
-   }
+   const expenseModal = document.getElementById("expense-modal");
+   const addExpenseBtn = document.getElementById("add-expense-btn");
+   const cancelExpenseBtn = document.getElementById("cancel-expense");
+   const expenseForm = document.getElementById("expense-form");
+   const expenseCategory = document.getElementById("expense-category");
+   const expenseAmount = document.getElementById("expense-amount");
+   const expenseNote = document.getElementById("expense-note");
 
-   function saveState() {
-      localStorage.setItem("wbm_state", JSON.stringify(state));
-   }
+   const budgetModal = document.getElementById("budget-modal");
+   const editBudgetBtn = document.getElementById("edit-budget-btn");
+   const cancelBudgetBtn = document.getElementById("cancel-budget");
+   const budgetForm = document.getElementById("budget-form");
+   const budgetIncomeInput = document.getElementById("budget-income");
+   const budgetCategoriesContainer = document.getElementById(
+      "budget-categories-container",
+   );
+   const addCategoryBtn = document.getElementById("add-category-btn");
 
-   function monthKey() {
-      return `${viewYear}-${viewMonth}`;
-   }
+   // ======== Functions ========
 
-   function getWeeks() {
-      return state.weeks[monthKey()] || [];
-   }
-
-   function getMonthExpenses() {
-      return state.expenses.filter((e) => {
-         const d = new Date(e.date);
-         return d.getMonth() === viewMonth && d.getFullYear() === viewYear;
+   // Calculate spent per category and totals
+   function recalcSpent() {
+      // Reset spent
+      budget.categories.forEach((c) => (c.spent = 0));
+      expenses.forEach((e) => {
+         const cat = budget.categories.find((c) => c.name === e.category);
+         if (cat) cat.spent += e.amount;
       });
    }
 
-   function getWeekExpenses(weekIdx) {
-      const weeks = getWeeks();
-      if (!weeks[weekIdx]) return [];
-      const w = weeks[weekIdx];
-      return getMonthExpenses().filter(
-         (e) => e.date >= w.start && e.date <= w.end,
+   // Render dashboard and category cards
+   function updateDashboard() {
+      recalcSpent();
+      const totalAllocated = budget.categories.reduce(
+         (acc, c) => acc + c.budget,
+         0,
       );
-   }
+      const remaining = budget.income - totalAllocated;
+      const today = new Date();
+      const daysLeft =
+         new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate() -
+         today.getDate() +
+         1;
+      const dailyAllowance = budget.categories[0].budget / daysLeft;
 
-   function changeMonth(dir) {
-      viewMonth += dir;
-      if (viewMonth < 0) {
-         viewMonth = 11;
-         viewYear--;
-      }
-      if (viewMonth > 11) {
-         viewMonth = 0;
-         viewYear++;
-      }
-      activeWeekIdx = 0;
-      activeExpTab = "all";
-      render();
-   }
+      totalBudgetEl.textContent = `₱${budget.income.toFixed(2)}`;
+      remainingBudgetEl.textContent = `₱${remaining.toFixed(2)}`;
+      dailyAllowanceEl.textContent = `₱${dailyAllowance.toFixed(2)}/day`;
 
-   function addWeek() {
-      const key = monthKey();
-      if (!state.weeks[key]) state.weeks[key] = [];
-      const weeks = state.weeks[key];
-      const n = weeks.length + 1;
-      const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
-      const prevEnd = weeks.length ? weeks[weeks.length - 1].end : null;
-      let startDay = prevEnd ? parseInt(prevEnd.split("-")[2]) + 1 : 1;
-      if (startDay > daysInMonth) {
-         alert("No more days left in this month!");
-         return;
-      }
-      const endDay = Math.min(startDay + 6, daysInMonth);
-      const mm = String(viewMonth + 1).padStart(2, "0");
-      weeks.push({
-         label: `Week ${n}`,
-         start: `${viewYear}-${mm}-${String(startDay).padStart(2, "0")}`,
-         end: `${viewYear}-${mm}-${String(endDay).padStart(2, "0")}`,
-      });
-      activeWeekIdx = weeks.length - 1;
-      saveState();
-      render();
-   }
+      // Render category cards
+      categoryCardsEl.innerHTML = "";
+      budget.categories.forEach((c) => {
+         const remainingCat = c.budget - c.spent;
+         let color = "bg-green-100";
+         if (remainingCat < 0) color = "bg-red-200";
+         else if (remainingCat / c.budget < 0.2) color = "bg-yellow-200";
 
-   function catSpentInWeek(catName, weekIdx) {
-      return getWeekExpenses(weekIdx)
-         .filter((e) => e.category === catName)
-         .reduce((a, e) => a + e.amount, 0);
-   }
-
-   function catSpentInMonth(catName) {
-      return getMonthExpenses()
-         .filter((e) => e.category === catName)
-         .reduce((a, e) => a + e.amount, 0);
-   }
-
-   function totalSpentMonth() {
-      return getMonthExpenses().reduce((a, e) => a + e.amount, 0);
-   }
-   function totalBudget() {
-      return state.categories.reduce((a, c) => a + c.budget, 0);
-   }
-
-   function render() {
-      document.getElementById("month-label").textContent =
-         `${MONTHS[viewMonth]} ${viewYear}`;
-      document.getElementById("header-title").textContent = "Budget Manager";
-      renderStats();
-      renderWeekTabs();
-      renderWeekView();
-      renderExpenses();
-   }
-
-   function renderStats() {
-      const spent = totalSpentMonth();
-      const budget = totalBudget();
-      const remaining = state.income - spent;
-      const unallocated = state.income - budget;
-      const now = new Date();
-      const isCurrentMonth =
-         now.getMonth() === viewMonth && now.getFullYear() === viewYear;
-      const daysLeft = isCurrentMonth
-         ? new Date(viewYear, viewMonth + 1, 0).getDate() - now.getDate() + 1
-         : new Date(viewYear, viewMonth + 1, 0).getDate();
-      const daily = daysLeft > 0 ? remaining / daysLeft : 0;
-
-      document.getElementById("stats-grid").innerHTML = `
-    <div class="stat-card">
-      <div class="label">Monthly income</div>
-      <div class="value">₱${state.income.toLocaleString()}</div>
-    </div>
-    <div class="stat-card">
-      <div class="label">Total spent</div>
-      <div class="value ${spent > budget ? "danger" : ""}">₱${spent.toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-    </div>
-    <div class="stat-card">
-      <div class="label">Remaining</div>
-      <div class="value ${remaining < 0 ? "danger" : remaining < budget * 0.2 ? "warn" : ""}">₱${remaining.toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-    </div>
-  `;
-   }
-
-   function renderWeekTabs() {
-      const weeks = getWeeks();
-      const container = document.getElementById("week-tabs");
-      container.innerHTML = "";
-      weeks.forEach((w, i) => {
-         const weekSpent = getWeekExpenses(i).reduce((a, e) => a + e.amount, 0);
-         const weekBudget = totalBudget() / (weeks.length || 1);
-         const isOver = weekSpent > weekBudget;
-         const tab = document.createElement("button");
-         tab.className = `week-tab${i === activeWeekIdx ? " active" : ""}${isOver ? " over" : ""}`;
-         tab.textContent = w.label;
-         tab.onclick = () => {
-            activeWeekIdx = i;
-            activeExpTab = "all";
-            render();
-         };
-         container.appendChild(tab);
-      });
-      if (weeks.length === 0) {
-         container.innerHTML =
-            '<span style="font-size:13px;color:var(--color-text-secondary);">No weeks yet — click "+ Add week" to start.</span>';
-      }
-   }
-
-   function renderWeekView() {
-      const weeks = getWeeks();
-      const w = weeks[activeWeekIdx];
-      if (!w) {
-         document.getElementById("week-summary-bar").innerHTML =
-            '<span style="color:var(--color-text-secondary)">Select or add a week to view details.</span>';
-         document.getElementById("cat-cards").innerHTML = "";
-         return;
-      }
-      const weekExpenses = getWeekExpenses(activeWeekIdx);
-      const weekSpent = weekExpenses.reduce((a, e) => a + e.amount, 0);
-      const weekBudget = totalBudget() / (weeks.length || 1);
-      const weekRemain = weekBudget - weekSpent;
-      document.getElementById("week-summary-bar").innerHTML = `
-    <span style="font-weight:500;">${w.label}</span>
-    <span style="color:var(--color-text-secondary);">${w.start} → ${w.end}</span>
-    <span>Spent: <strong>₱${weekSpent.toFixed(2)}</strong></span>
-    <span class="${weekRemain < 0 ? "badge red" : "badge green"}">Remaining: ₱${weekRemain.toFixed(2)}</span>
-  `;
-
-      const cards = document.getElementById("cat-cards");
-      cards.innerHTML = "";
-      state.categories.forEach((cat) => {
-         const spent = catSpentInWeek(cat.name, activeWeekIdx);
-         const weekCatBudget = cat.budget / (weeks.length || 1);
-         const remain = weekCatBudget - spent;
-         const pct = Math.min((spent / weekCatBudget) * 100, 100);
-         const colorClass = remain < 0 ? "red" : pct > 80 ? "yellow" : "green";
-         const fillClass = remain < 0 ? "over" : pct > 80 ? "warn" : "";
-         cards.innerHTML += `
-      <div class="cat-card ${colorClass}">
-        <div class="cat-name">${cat.name}</div>
-        <div class="cat-nums">Week budget: ₱${weekCatBudget.toFixed(2)}</div>
-        <div class="cat-nums">Spent: ₱${spent.toFixed(2)}</div>
-        <div class="cat-remain ${remain < 0 ? "over" : ""}">Remaining: ₱${remain.toFixed(2)}</div>
-        <div class="progress-bar"><div class="progress-fill ${fillClass}" style="width:${pct}%"></div></div>
-      </div>
-    `;
-      });
-   }
-
-   function renderExpenses() {
-      const weeks = getWeeks();
-      const w = weeks[activeWeekIdx];
-      const tabsEl = document.getElementById("expense-tabs");
-      tabsEl.innerHTML = "";
-      const tabNames = ["all", ...state.categories.map((c) => c.name)];
-      tabNames.forEach((t) => {
-         const btn = document.createElement("button");
-         btn.className = `exp-tab${activeExpTab === t ? " active" : ""}`;
-         btn.textContent = t === "all" ? "All" : t;
-         btn.onclick = () => {
-            activeExpTab = t;
-            render();
-         };
-         tabsEl.appendChild(btn);
+         const card = document.createElement("div");
+         card.className = `${color} p-4 rounded shadow`;
+         card.innerHTML = `
+        <h3 class="font-bold">${c.name}</h3>
+        <p>Spent: ₱${c.spent.toFixed(2)} / ₱${c.budget.toFixed(2)}</p>
+        <p>Remaining: ₱${remainingCat.toFixed(2)}</p>
+      `;
+         categoryCardsEl.appendChild(card);
       });
 
-      const body = document.getElementById("expenses-body");
-      body.innerHTML = "";
-      const allExp = w ? getWeekExpenses(activeWeekIdx) : getMonthExpenses();
-      const filtered =
-         activeExpTab === "all"
-            ? allExp
-            : allExp.filter((e) => e.category === activeExpTab);
+      // Populate expense category select
+      expenseCategory.innerHTML = "";
+      budget.categories.forEach((c) => {
+         const option = document.createElement("option");
+         option.value = c.name;
+         option.textContent = c.name;
+         expenseCategory.appendChild(option);
+      });
 
-      if (filtered.length === 0) {
-         body.innerHTML = `<tr><td colspan="5"><div class="empty-state">No expenses yet for this week.</div></td></tr>`;
-         return;
-      }
-
-      filtered
-         .sort((a, b) => b.date.localeCompare(a.date))
-         .forEach((e) => {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-      <td>${e.date}</td>
-      <td><span class="badge green">${e.category}</span></td>
-      <td>₱${e.amount.toFixed(2)}</td>
-      <td style="color:var(--color-text-secondary)">${e.note || "—"}</td>
-      <td>
-        <div class="actions">
-          <button class="btn sm" onclick="editExpense('${e.id}')">Edit</button>
-          <button class="btn sm danger" onclick="deleteExpense('${e.id}')">Delete</button>
-        </div>
-      </td>
-    `;
-            body.appendChild(tr);
-         });
+      // Render expenses table
+      renderExpensesTable();
    }
 
-   function openExpenseModal(id = null) {
-      editingExpenseId = id;
-      const modal = document.getElementById("expense-modal");
-      document.getElementById("expense-modal-title").textContent = id
-         ? "Edit expense"
-         : "Add expense";
-
-      const catSel = document.getElementById("exp-category");
-      catSel.innerHTML = state.categories
-         .map((c) => `<option value="${c.name}">${c.name}</option>`)
-         .join("");
-
-      const weekSel = document.getElementById("exp-week");
-      const weeks = getWeeks();
-      weekSel.innerHTML = weeks
-         .map((w, i) => `<option value="${i}">${w.label} (${w.start})</option>`)
-         .join("");
-      weekSel.value = activeWeekIdx;
-
-      if (id) {
-         const exp = state.expenses.find((e) => e.id === id);
-         if (exp) {
-            catSel.value = exp.category;
-            document.getElementById("exp-amount").value = exp.amount;
-            document.getElementById("exp-note").value = exp.note || "";
-            document.getElementById("exp-date").value = exp.date;
-            const wIdx = weeks.findIndex(
-               (w) => exp.date >= w.start && exp.date <= w.end,
-            );
-            if (wIdx >= 0) weekSel.value = wIdx;
-         }
-      } else {
-         document.getElementById("exp-amount").value = "";
-         document.getElementById("exp-note").value = "";
-         document.getElementById("exp-date").value = new Date()
-            .toISOString()
-            .split("T")[0];
-      }
-
-      modal.classList.add("open");
-   }
-
-   function editExpense(id) {
-      openExpenseModal(id);
-   }
-
-   function deleteExpense(id) {
-      state.expenses = state.expenses.filter((e) => e.id !== id);
-      saveState();
-      render();
-   }
-
-   function saveExpense() {
-      const cat = document.getElementById("exp-category").value;
-      const amount = parseFloat(document.getElementById("exp-amount").value);
-      const note = document.getElementById("exp-note").value.trim();
-      const date = document.getElementById("exp-date").value;
-      const weekIdx = parseInt(document.getElementById("exp-week").value);
-      const weeks = getWeeks();
-
-      if (!amount || isNaN(amount) || !date) {
-         alert("Please enter amount and date.");
-         return;
-      }
-
-      let finalDate = date;
-      if (weeks[weekIdx]) {
-         if (date < weeks[weekIdx].start || date > weeks[weekIdx].end) {
-            finalDate = weeks[weekIdx].start;
-         }
-      }
-
-      if (editingExpenseId) {
-         const idx = state.expenses.findIndex((e) => e.id === editingExpenseId);
-         if (idx >= 0)
-            state.expenses[idx] = {
-               ...state.expenses[idx],
-               category: cat,
-               amount,
-               note,
-               date: finalDate,
-            };
-      } else {
-         state.expenses.push({
-            id: Date.now().toString(),
-            category: cat,
-            amount,
-            note,
-            date: finalDate,
-         });
-      }
-
-      saveState();
-      closeModal("expense-modal");
-      render();
-   }
-
-   function openBudgetModal() {
-      document.getElementById("bud-income").value = state.income;
-      renderBudgetCategories();
-      document.getElementById("budget-modal").classList.add("open");
-   }
-
-   function renderBudgetCategories() {
-      const container = document.getElementById("bud-categories");
-      container.innerHTML = "";
-      state.categories.forEach((cat, i) => {
-         const row = document.createElement("div");
-         row.className = "cat-row";
+   // Render expenses table
+   function renderExpensesTable() {
+      expensesTableBody.innerHTML = "";
+      expenses.forEach((e, index) => {
+         const row = document.createElement("tr");
          row.innerHTML = `
-      <input type="text" value="${cat.name}" placeholder="Name" data-idx="${i}" data-field="name" style="flex:1.5" oninput="updateBudgetCat(this)"/>
-      <input type="number" value="${cat.budget}" placeholder="Budget" data-idx="${i}" data-field="budget" min="0" step="0.01" oninput="updateBudgetCat(this)"/>
-      <button class="btn sm danger" onclick="removeBudgetCat(${i})">✕</button>
-    `;
-         container.appendChild(row);
+        <td class="p-2 border">${e.date}</td>
+        <td class="p-2 border">${e.category}</td>
+        <td class="p-2 border">$${e.amount.toFixed(2)}</td>
+        <td class="p-2 border">${e.note}</td>
+        <td class="p-2 border flex gap-2">
+          <button class="edit-btn bg-yellow-400 px-2 rounded hover:bg-yellow-500" data-index="${index}">✎</button>
+          <button class="delete-btn bg-red-400 px-2 rounded hover:bg-red-500" data-index="${index}">🗑</button>
+        </td>
+      `;
+         expensesTableBody.appendChild(row);
       });
+
+      // Add event listeners for delete
+      document.querySelectorAll(".delete-btn").forEach((btn) => {
+         btn.addEventListener("click", () => {
+            const i = btn.dataset.index;
+            expenses.splice(i, 1);
+            saveData();
+            updateDashboard();
+         });
+      });
+
+      // (Optional) Add edit functionality later
    }
 
-   function updateBudgetCat(el) {
-      const i = parseInt(el.dataset.idx);
-      const field = el.dataset.field;
-      state.categories[i][field] =
-         field === "budget" ? parseFloat(el.value) || 0 : el.value;
+   // Save to LocalStorage
+   function saveData() {
+      localStorage.setItem("budget", JSON.stringify(budget));
+      localStorage.setItem("expenses", JSON.stringify(expenses));
    }
 
-   function addBudgetCategoryRow() {
-      state.categories.push({ name: "", budget: 0 });
-      renderBudgetCategories();
+   // Load from LocalStorage
+   function loadData() {
+      if (localStorage.getItem("budget"))
+         budget = JSON.parse(localStorage.getItem("budget"));
+      if (localStorage.getItem("expenses"))
+         expenses = JSON.parse(localStorage.getItem("expenses"));
    }
 
-   function removeBudgetCat(i) {
-      state.categories.splice(i, 1);
-      renderBudgetCategories();
+   // Open/Close Modals
+   function openModal(modal) {
+      modal.classList.remove("hidden");
+   }
+   function closeModal(modal) {
+      modal.classList.add("hidden");
    }
 
-   function saveBudget() {
-      state.income =
-         parseFloat(document.getElementById("bud-income").value) || 0;
-      closeModal("budget-modal");
-      saveState();
-      render();
-   }
+   // ======== Event Listeners ========
 
-   function closeModal(id) {
-      document.getElementById(id).classList.remove("open");
-   }
+   // Add Expense
+   addExpenseBtn.addEventListener("click", () => openModal(expenseModal));
+   cancelExpenseBtn.addEventListener("click", () => {
+      closeModal(expenseModal);
+      expenseForm.reset();
+   });
 
-   render();
+   expenseForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const amount = parseFloat(expenseAmount.value);
+      const category = expenseCategory.value;
+      const note = expenseNote.value;
+      const date = new Date().toISOString().split("T")[0];
+
+      expenses.push({ amount, category, note, date });
+      saveData();
+      updateDashboard();
+      closeModal(expenseModal);
+      expenseForm.reset();
+   });
+
+   // Edit Budget
+   editBudgetBtn.addEventListener("click", () => {
+      openModal(budgetModal);
+      budgetIncomeInput.value = budget.income;
+
+      budgetCategoriesContainer.innerHTML = "";
+      budget.categories.forEach((c, i) => {
+         const div = document.createElement("div");
+         div.className = "flex gap-2 mb-2";
+         div.innerHTML = `
+        <input type="text" value="${c.name}" placeholder="Category" class="flex-1 border rounded p-2 category-name" required>
+        <input type="number" value="${c.budget}" placeholder="Budget" class="w-24 border rounded p-2 category-budget" required min="0" step="0.01">
+        <button type="button" class="remove-category bg-red-400 px-2 rounded hover:bg-red-500">🗑</button>
+      `;
+         budgetCategoriesContainer.appendChild(div);
+
+         div.querySelector(".remove-category").addEventListener("click", () => {
+            div.remove();
+         });
+      });
+   });
+
+   cancelBudgetBtn.addEventListener("click", () => closeModal(budgetModal));
+
+   // Add new category input in Edit Budget
+   addCategoryBtn.addEventListener("click", () => {
+      const div = document.createElement("div");
+      div.className = "flex gap-2 mb-2";
+      div.innerHTML = `
+      <input type="text" placeholder="Category" class="flex-1 border rounded p-2 category-name" required>
+      <input type="number" placeholder="Budget" class="w-24 border rounded p-2 category-budget" required min="0" step="0.01">
+      <button type="button" class="remove-category bg-red-400 px-2 rounded hover:bg-red-500">🗑</button>
+    `;
+      budgetCategoriesContainer.appendChild(div);
+
+      div.querySelector(".remove-category").addEventListener("click", () =>
+         div.remove(),
+      );
+   });
+
+   // Save Budget
+   budgetForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      budget.income = parseFloat(budgetIncomeInput.value);
+      const newCategories = [];
+      budgetCategoriesContainer.querySelectorAll("div").forEach((div) => {
+         const name = div.querySelector(".category-name").value.trim();
+         const b = parseFloat(div.querySelector(".category-budget").value);
+         if (name && !isNaN(b))
+            newCategories.push({ name, budget: b, spent: 0 });
+      });
+      budget.categories = newCategories;
+      saveData();
+      updateDashboard();
+      closeModal(budgetModal);
+   });
+
+   // ======== Initialize ========
+   loadData();
+   updateDashboard();
 </script>
+
+<!-- ---
+
+## **Monthly & Daily Budget Money Manager Web App**
+
+> I want to build a **simple web-based money manager** that helps users track monthly and daily budgets by category. The app should allow users to:
+>
+> 1. **Set up monthly income** and **budget categories** such as:
+>  * Create more categories
+>  * Set total monthly income
+>  * Set a monthly budget for each category
+>  * Automatic reduction of total monthly budget and remaining money after adding category budget
+>  *
+>
+> 2. **Add expenses** with:
+>    * Category
+>    * Amount
+>    * Optional note
+>    * Automatic date assignment
+     * Automatic update of remaining budget and category-specific daily allowance after adding expenses
+     * Editable and deletable expenses for better tracking
+>
+> 3. **Dashboard** showing:
+>
+>    * Has 2 choices, monthly and daily budget per category
+>    * Monthly total budget and remaining money
+>    * Monthly budget per category
+>    * Spent amount per category
+>    * Remaining money per category
+>    * **Daily allowance** automatically calculated (`remaining ÷ days left in month`)
+>    * Color-coded alerts:
+>
+>      * Green: within budget
+>      * Yellow: approaching limit (e.g., <20% left)
+>      * Red: overspent
+>
+> 4. **Expenses list** with table by category and date
+>     * Has tabs for each category and an "All Expenses" tab
+>     
+>
+> 5. **Edit budget feature** allowing users to update their monthly budgets and income at any time
+>
+> 6. **Data persistence**:
+>
+>    * First version can use **Local Storage** (fast, offline, single-user)
+>    * Later version can include **multi-user support with login** and cloud storage (Laravel + database)
+>
+> 7. **Tech stack**:
+>
+>    * Frontend: HTML + Vanilla JS + CSS (Tailwind optional)
+>    * Backend: Optional for later version (Laravel)
+>
+> The goal is to create a **practical, user-friendly tool** where users can plan their budgets and be aware of daily spending and avoid accidentally spending savings.
+
+---
+
+💡 Optional Add-ons for the prompt:
+
+* Add **edit/delete individual expenses**
+* Add **charts or graphs** for spending trends
+* Make it a **PWA** so it can be installed on phones
+
+---
+ -->
